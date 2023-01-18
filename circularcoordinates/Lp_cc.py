@@ -3,7 +3,7 @@ import torch
 from ripser import ripser
 from tqdm import tqdm
 
-import circularcoordinates
+from .w_cc import weighted_circular_coordinate
 
 
 def appr(el):
@@ -33,14 +33,22 @@ class CircCoordLn:
         birth = self.dgm[:, 0][self.argsort[index]]
         death = self.dgm[:, 1][self.argsort[index]]
         self.eps = (birth + death) / 2
-        self.arg_eps = self.argsort[index]
+        # self.arg_eps = self.argsort[index]
+        self.arg_eps = index
         return death - birth
 
     def cc_original(self):
-        circ = circularcoordinates.circular_coordinate(prime=self.prime)
-        self.delta, self.vertex_values, self.cocycle_mat = circ.circular_coordinate(self.ripser_result, self.prime,
-                                                                                    weight=None, eps=self.eps,
-                                                                                    arg_eps=self.arg_eps)
+        # circ = circular_coordinate(prime=self.prime)
+        # self.delta, self.vertex_values, self.cocycle_mat = circ.circular_coordinate(self.ripser_result, self.prime,
+        #                                                                             weight=None, eps=self.eps,
+        #                                                                             arg_eps=self.arg_eps)
+        # self.vertex_values = np.mod(self.vertex_values, 1.0)
+        self.delta, self.vertex_values, self.cocycle_mat = weighted_circular_coordinate(self.ripser_result,
+                                                                                        ripser_result=True,
+                                                                                        prime=self.prime,
+                                                                                        cocycle_n=self.arg_eps,
+                                                                                        eps=self.eps, weight_ft=None,
+                                                                                        return_aux=True)
         return self.vertex_values
 
     def f_reset(self):
@@ -48,14 +56,15 @@ class CircCoordLn:
         self.f_value.requires_grad = True
 
     def f_reset_L2(self):
-        self.f_value = torch.from_numpy(self.vertex_values).float()
+        self.f_value = torch.from_numpy(self.vertex_values.copy()).float()
         self.f_value.requires_grad = True
 
     def cc_Lp_setup(self, lr):
         self.delta_torch = torch.sparse_coo_tensor(np.asarray([self.delta.row, self.delta.col]),
                                                    self.delta.data).float()
         self.delta_torch.requires_grad = False
-        self.cocycle_torch = torch.as_tensor(self.cocycle_mat[0])[0]
+        # self.cocycle_torch = torch.as_tensor(self.cocycle_mat[0])[0]
+        self.cocycle_torch = torch.as_tensor(self.cocycle_mat.copy())
         self.cocycle_torch.requires_grad = False
 
         self.optimizer = torch.optim.SGD([self.f_value], lr=lr)
@@ -134,7 +143,8 @@ class CircCoordLn:
             else:
                 alpha_bar, alpha_bar_inf_norm = self.cc_aux_inf()
                 prev_norm = alpha_bar_inf_norm.item()
-                pbar.set_postfix_str(f'{appr(alpha_bar_inf_norm.item())} / {appr(alpha_bar_inf_norm.item())} / p = infty')
+                pbar.set_postfix_str(
+                    f'{appr(alpha_bar_inf_norm.item())} / {appr(alpha_bar_inf_norm.item())} / p = infty')
                 losses.append(alpha_bar_inf_norm.item())
 
         return self.f_value.detach().numpy().copy(), losses
