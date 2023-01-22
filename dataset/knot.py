@@ -3,9 +3,7 @@ import os
 import numpy as np
 
 
-
-def noisy_knot(remove=False, location = './knot.npz'
-):
+def noisy_knot(remove=False, location='./knot.npz'):
     if os.path.exists(location):
         if remove:
             os.remove(location)
@@ -14,7 +12,7 @@ def noisy_knot(remove=False, location = './knot.npz'
             return np.load(location)
     else:
         n = 900
-        coord = np.mod(np.random.normal(loc=0.5, scale=0.2, size=n),1.0) *(2 * np.pi)
+        coord = np.mod(np.random.normal(loc=0.5, scale=0.2, size=n), 1.0) * (2 * np.pi)
         data = np.asarray([
             1 * np.cos(coord) + 2 * np.cos(2 * coord),
             1 * np.sin(coord) - 2 * np.sin(2 * coord),
@@ -30,7 +28,7 @@ if __name__ == '__main__':
 
     fig = plt.figure(figsize=(5, 5))
     ax = plt.axes(projection='3d')
-    ax.scatter(*noisy_knot(True)['data'].T)
+    ax.scatter(*noisy_knot(False)['data'].T)
     ax.view_init(elev=80, azim=20)
     plt.tight_layout()
     plt.show()

@@ -127,4 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-*.png
+
+*.npz
+*.pkl
+exp_fig/
+COIL/
+coil_cc/
+coil_label/

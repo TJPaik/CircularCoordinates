@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 
+
 def noisy_circle(remove=False, location='./circle.npz'):
     if os.path.exists(location):
         if remove:

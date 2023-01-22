@@ -59,7 +59,7 @@ def weight_ft_0(k, t=None):
         nonlocal t
         if t is None:
             tmp = dist_mat[edges[:, 0], edges[:, 1]]
-            t = 0.1 * np.mean(tmp[tmp != 0])
+            t = 0.2 * np.mean(tmp[tmp != 0])
             print(t)
         G = np.exp(-(dist_mat ** 2) / (4 * t))
         G = G / ((4 * np.pi * t) ** (k / 2))
@@ -67,8 +67,8 @@ def weight_ft_0(k, t=None):
         P_inv = np.diag(1 / P)
         W = G @ P_inv
         D = np.sum(W, axis=1)
-        L_w = P_inv @ ((D @ P - G) / (t * len(dist_mat))) @ P_inv
-        metric_weight = L_w[edges[:, 0], edges[:, 1]]
+        L_w = P_inv @ (np.diag(D * P) - G) @ P_inv
+        metric_weight = -L_w[edges[:, 0], edges[:, 1]]
         metric_weight = np.maximum(metric_weight, 0)  # for safety
         sqrt_weight = np.sqrt(metric_weight)
 
@@ -81,24 +81,13 @@ def weight_ft_0(k, t=None):
 
 
 def weight_ft_with_degree_meta(ft: callable):
-    # ft(degree1, degree2) -> c
+    # ft(degree1: ndarray, degree2: ndarray) -> c
     def _weight_ft(delta, cocycle, dist_mat, edges):
-        ndarray_delta = delta.toarray()
-        degrees = np.abs(ndarray_delta).sum(0) / 2
-        weight = []
-        for el in ndarray_delta:
-            tmp = np.where(el != 0)[0]
-            if len(tmp) == 0:
-                weight.append(1)
-            else:
-                tmp = np.sort(tmp)
-                weight.append(
-                    ft(degrees[tmp[0]], degrees[tmp[1]])
-                )
-
-        weight = np.asarray(weight)
-        new_delta = delta.multiply(weight[:, None])
-        new_cocycle = weight * cocycle
+        degrees = np.asarray(np.abs(delta).sum(0))[0] / 2
+        degrees = degrees[edges]
+        weights = ft(degrees[:, 0], degrees[:, 1])
+        new_cocycle = weights * cocycle
+        new_delta = delta.multiply(weights[:, None])
 
         return new_delta, new_cocycle
 
