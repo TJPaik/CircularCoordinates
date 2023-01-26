@@ -129,8 +129,10 @@ dmypy.json
 .pyre/
 
 *.npz
+*.npy
 *.pkl
 exp_fig/
 COIL/
 coil_cc/
 coil_label/
+coil_figures/
