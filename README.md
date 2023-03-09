@@ -1,4 +1,4 @@
-# Circular Coordinates
+# Circular Coordinates for Density-Robust Analysis
 This repository contains the source code and experiments for the paper titled "Circular Coordinates for Density-Robust Analysis".
 The paper proposes new circular coordinates for dimensionality reduction that are robust to variations in density.
 The methods generate a new coordinate system that depends on the shape of an underlying manifold, preserving topological structures.
